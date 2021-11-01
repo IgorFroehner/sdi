@@ -1,30 +1,31 @@
-all: client server main_file
+all: client server
 
 hw.h: hw.x
 	rpcgen hw.x
+	mv hw_clnt.c out/hw_clnt.c
+	mv hw_svc.c out/hw_svc.c
+	mv hw.h out/hw.h
 	
-hw_svc.c hw_clnt.c hw_client.c: hw.h
+hw_svc.o hw_clnt.o: hw.h
+	gcc -c out/hw_svc.c -o out/hw_svc.o
+	gcc -c out/hw_clnt.c -o out/hw_clnt.o
 
-tools.o: tools.c
-	gcc -c tools.c -o tools.o
+hw_client.o: hw.h
+	gcc -c src/hw_client.c -o out/hw_client.o
 
-main_file: main_file.c tools.o
-	gcc -o main_file tools.o main_file.c
+hw_server.o: hw.h
+	gcc -c src/hw_server.c -o out/hw_server.o
 
-client: hw_client.o hw_clnt.o
-	gcc -o client hw_client.o hw_clnt.o -lnsl
+utils.o:
+	gcc -c src/utils/utils.c -o out/utils.o
 
-server: hw_server.o hw_svc.o
-	gcc -o server hw_server.o hw_svc.o -lnsl
+client: hw_client.o hw_clnt.o utils.o
+	gcc -o out/client out/hw_client.o out/hw_clnt.o out/utils.o -lnsl -lpthread
+
+server: hw_server.o hw_svc.o utils.o
+	gcc -o out/server out/hw_server.o out/hw_svc.o -lnsl
 
 .PHONY: clean
 
 clean:
-	-rm *.o
-	-rm client*
-	-rm server*
-	-rm main_file
-	-rm *.serv
-	-rm hw.h
-	-rm hw_clnt.c
-	-rm hw_svc.c
+	-rm out/*
