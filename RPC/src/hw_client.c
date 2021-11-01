@@ -36,7 +36,7 @@ void *listener_thread(void *vargp) {
 	CLIENT *cl = (CLIENT*) vargp;
 
 	system("clear");
-	printf("Welcome %s!\n\n", username);
+	printf("Welcome %s%s%s!\n\n", user_color, username, RESET);
 	
 	while (running) {
 		while (true) {

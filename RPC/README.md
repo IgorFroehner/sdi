@@ -12,5 +12,9 @@
 
 * Executar o cliente:
     ```shell
-    ./out/client
+    ./out/client <ip-servidor>
     ```
+
+### Exemplo:
+
+![exemplo_chat](./docs/exemplo.png)
