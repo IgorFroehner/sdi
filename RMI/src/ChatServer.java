@@ -7,16 +7,30 @@ import java.rmi.registry.*;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.lang.*;
 import java.io.*;
 import java.nio.file.*;
 import java.nio.charset.StandardCharsets;
+import java.time.*;
+import java.util.stream.Collectors;
 
 public class ChatServer implements Chat {
-    private int messageCount = 0;
-    private String messagesFolder = "server_messages";
+    private static String messagesFolder = "server_messages";
+    private static List<String> messagesNameList;
 
     public static void main(String[] args) {
         try {
+            Path path = Paths.get(messagesFolder);
+            if (!Files.exists(path)) {
+                Files.createDirectories(path);                
+            }
+
+            messagesNameList = Files.list(path)
+                .map(Path::getFileName)
+                .map(Path::toString)
+                .filter(f -> f.endsWith(".serv"))
+                .collect(Collectors.toList());
+
             // Instancia o objeto servidor e a sua stub
             ChatServer server = new ChatServer();
             Chat chat = (Chat) UnicastRemoteObject.exportObject(server, 0);
@@ -26,6 +40,9 @@ public class ChatServer implements Chat {
 
             registry.bind("Chat", chat);
             System.out.println("Servidor pronto");
+        } catch (IOException e) {
+            System.err.println("Failed while creating the directory");
+            System.exit(1);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -33,15 +50,32 @@ public class ChatServer implements Chat {
 
     public void send(String user, List<String> message) throws RemoteException {
         try {
-            Path path = Paths.get(messagesFolder + "/" + user + "-" + (messageCount++) + ".serv");
+            System.out.println("[" + LocalTime.now() + "] Message Received from " + user);
+
+            String messageName = user + "-" + messagesNameList.size() + ".serv";
+            Path path = Paths.get(messagesFolder + "/" + messageName);
             Files.write(path, message, StandardCharsets.UTF_8, StandardOpenOption.CREATE);
+
+            messagesNameList.add(messageName);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public int receive() throws RemoteException {
-        return 1;
+    public List<String> receive(int messageId) throws RemoteException {
+        if (messageId >= messagesNameList.size()) return null;
+        try {
+            Path path = Paths.get(messagesFolder + "/" + messagesNameList.get(messageId));
+            return Files.readAllLines(path);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }     
+        return null;
+    }
+
+    public String receiveFileName(int messageId) throws RemoteException {
+        if (messageId >= messagesNameList.size()) return null;
+        return messagesNameList.get(messageId);
     }
 
 }

@@ -4,5 +4,6 @@ import java.util.*;
 
 public interface Chat extends Remote {
    public void send(String user, List<String> message) throws RemoteException;
-   public int receive() throws RemoteException;
+   public List<String> receive(int messageId) throws RemoteException;
+   public String receiveFileName(int messageId) throws RemoteException;
 }
